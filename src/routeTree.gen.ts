@@ -10,14 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CategoriasRouteImport } from './routes/categorias'
+import { Route as LancamentosRouteImport } from './routes/lancamentos'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiExtractRouteImport } from './routes/api/extract'
 import { Route as ApiInsightsRouteImport } from './routes/api/insights'
+import { Route as CartoesIdRouteImport } from './routes/cartoes.$id'
+import { Route as ContasIndexRouteImport } from './routes/contas.index'
+import { Route as ContasIdRouteImport } from './routes/contas.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriasRoute = CategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LancamentosRoute = LancamentosRouteImport.update({
+  id: '/lancamentos',
+  path: '/lancamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -40,50 +55,109 @@ const ApiInsightsRoute = ApiInsightsRouteImport.update({
   path: '/api/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CartoesIdRoute = CartoesIdRouteImport.update({
+  id: '/cartoes/$id',
+  path: '/cartoes/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContasIndexRoute = ContasIndexRouteImport.update({
+  id: '/contas/',
+  path: '/contas/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContasIdRoute = ContasIdRouteImport.update({
+  id: '/contas/$id',
+  path: '/contas/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/categorias': typeof CategoriasRoute
+  '/lancamentos': typeof LancamentosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/cartoes/$id': typeof CartoesIdRoute
+  '/contas/$id': typeof ContasIdRoute
+  '/contas/': typeof ContasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/categorias': typeof CategoriasRoute
+  '/lancamentos': typeof LancamentosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/cartoes/$id': typeof CartoesIdRoute
+  '/contas/$id': typeof ContasIdRoute
+  '/contas': typeof ContasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/categorias': typeof CategoriasRoute
+  '/lancamentos': typeof LancamentosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/cartoes/$id': typeof CartoesIdRoute
+  '/contas/$id': typeof ContasIdRoute
+  '/contas/': typeof ContasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/onboarding' | '/api/chat' | '/api/extract' | '/api/insights'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/onboarding' | '/api/chat' | '/api/extract' | '/api/insights'
-  id:
-    | '__root__'
     | '/'
+    | '/categorias'
+    | '/lancamentos'
     | '/onboarding'
     | '/api/chat'
     | '/api/extract'
     | '/api/insights'
+    | '/cartoes/$id'
+    | '/contas/$id'
+    | '/contas/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/categorias'
+    | '/lancamentos'
+    | '/onboarding'
+    | '/api/chat'
+    | '/api/extract'
+    | '/api/insights'
+    | '/cartoes/$id'
+    | '/contas/$id'
+    | '/contas'
+  id:
+    | '__root__'
+    | '/'
+    | '/categorias'
+    | '/lancamentos'
+    | '/onboarding'
+    | '/api/chat'
+    | '/api/extract'
+    | '/api/insights'
+    | '/cartoes/$id'
+    | '/contas/$id'
+    | '/contas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CategoriasRoute: typeof CategoriasRoute
+  LancamentosRoute: typeof LancamentosRoute
   OnboardingRoute: typeof OnboardingRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiExtractRoute: typeof ApiExtractRoute
   ApiInsightsRoute: typeof ApiInsightsRoute
+  CartoesIdRoute: typeof CartoesIdRoute
+  ContasIdRoute: typeof ContasIdRoute
+  ContasIndexRoute: typeof ContasIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -93,6 +167,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categorias': {
+      id: '/categorias'
+      path: '/categorias'
+      fullPath: '/categorias'
+      preLoaderRoute: typeof CategoriasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lancamentos': {
+      id: '/lancamentos'
+      path: '/lancamentos'
+      fullPath: '/lancamentos'
+      preLoaderRoute: typeof LancamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -123,15 +211,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cartoes/$id': {
+      id: '/cartoes/$id'
+      path: '/cartoes/$id'
+      fullPath: '/cartoes/$id'
+      preLoaderRoute: typeof CartoesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contas/': {
+      id: '/contas/'
+      path: '/contas'
+      fullPath: '/contas/'
+      preLoaderRoute: typeof ContasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contas/$id': {
+      id: '/contas/$id'
+      path: '/contas/$id'
+      fullPath: '/contas/$id'
+      preLoaderRoute: typeof ContasIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CategoriasRoute: CategoriasRoute,
+  LancamentosRoute: LancamentosRoute,
   OnboardingRoute: OnboardingRoute,
   ApiChatRoute: ApiChatRoute,
   ApiExtractRoute: ApiExtractRoute,
   ApiInsightsRoute: ApiInsightsRoute,
+  CartoesIdRoute: CartoesIdRoute,
+  ContasIdRoute: ContasIdRoute,
+  ContasIndexRoute: ContasIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
