@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Download, EyeOff, FileUp, Fingerprint, ShieldAlert, Tags } from "lucide-react";
+import { Download, EyeOff, FileUp, Fingerprint, ShieldAlert, Tags, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,8 @@ import { accountBalance, currentMonth, invoiceTotal, todayISO } from "@/lib/fina
 import { money, parseMoney } from "@/lib/format";
 import { biometricAvailable, hashPin, registerBiometric } from "@/lib/security";
 import { useProfile } from "@/hooks/use-profile";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getInstallPrompt, installAvailabilityEvent } from "@/lib/pwa-install";
 
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
@@ -45,8 +47,21 @@ function Config() {
   const [adjTarget, setAdjTarget] = useState("");
   const [adjValue, setAdjValue] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
+  const [installHelpOpen, setInstallHelpOpen] = useState(false);
+  const [installAvailable, setInstallAvailable] = useState(false);
+  const [appInstalled, setAppInstalled] = useState(false);
   const [confirm, setConfirm] = useState("");
   useEffect(() => { biometricAvailable().then(setBioOk); }, []);
+  useEffect(() => {
+    const updateInstallState = () => {
+      setInstallAvailable(!!getInstallPrompt());
+      setAppInstalled(window.matchMedia("(display-mode: standalone)").matches ||
+        ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true));
+    };
+    updateInstallState();
+    window.addEventListener(installAvailabilityEvent, updateInstallState);
+    return () => window.removeEventListener(installAvailabilityEvent, updateInstallState);
+  }, []);
   if (!data?.settings) return null;
   const s = data.settings;
   const upd = (p: Partial<typeof s>) => db.settings.update("app", p);
@@ -109,9 +124,31 @@ function Config() {
     URL.revokeObjectURL(url);
   }
 
+  async function installApp() {
+    const installPrompt = getInstallPrompt();
+    if (!installPrompt) {
+      setInstallHelpOpen(true);
+      return;
+    }
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      window.__finaiInstallPrompt = undefined;
+      setInstallAvailable(false);
+      toast.success("Instalação iniciada.");
+    }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader title="Configurações" />
+      <Section title="Aplicativo">
+        <p className="text-xs text-muted-foreground">Instale o FinAI na tela inicial para abrir como um aplicativo e acessar mais rapidamente.</p>
+        <Button onClick={installApp} disabled={appInstalled}>
+          <Smartphone /> {appInstalled ? "Aplicativo instalado" : "Instalar Aplicativo"}
+        </Button>
+        {!installAvailable && !appInstalled && <p className="text-xs text-muted-foreground">Se a instalação automática não estiver disponível neste navegador, veja as instruções de instalação.</p>}
+      </Section>
       <Section title="Preferências">
         <div className="flex items-center justify-between">
           <Label>Moeda</Label>
@@ -187,6 +224,29 @@ function Config() {
         <Button variant="secondary" onClick={exportJSON}><Download /> Exportar backup (JSON)</Button>
         <Button variant="destructive" onClick={() => { setConfirm(""); setResetOpen(true); }}><ShieldAlert /> Zerar / Resetar Aplicativo</Button>
       </Section>
+
+      <Dialog open={installHelpOpen} onOpenChange={setInstallHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Instale o FinAI no seu celular</DialogTitle>
+            <DialogDescription>As opções podem variar um pouco conforme o navegador.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-1 font-semibold">iPhone ou iPad (Safari)</h3>
+              <p className="text-muted-foreground">Toque no ícone de Compartilhar <span aria-label="Compartilhar">□↑</span> e selecione <strong>Adicionar à Tela de Início</strong>. Confirme tocando em Adicionar.</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-1 font-semibold">Android (Chrome)</h3>
+              <p className="text-muted-foreground">Abra o menu ⋮ do navegador e toque em <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-1 font-semibold">Computador</h3>
+              <p className="text-muted-foreground">No Chrome ou Edge, use o ícone de instalação na barra de endereço ou a opção <strong>Instalar FinAI</strong> no menu do navegador.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
         <AlertDialogContent>

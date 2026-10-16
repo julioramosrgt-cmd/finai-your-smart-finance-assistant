@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/finai/AppShell";
 import { Toaster } from "@/components/ui/sonner";
+import { installAvailabilityEvent, type InstallPromptEvent } from "@/lib/pwa-install";
 
 function NotFoundComponent() {
   return (
@@ -125,12 +126,28 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    if (import.meta.env.DEV || !("serviceWorker" in navigator)) return;
-    if ((window as Window & { __lovableEvents?: unknown }).__lovableEvents) return;
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      window.__finaiInstallPrompt = event as InstallPromptEvent;
+      window.dispatchEvent(new Event(installAvailabilityEvent));
+    };
+    const handleInstalled = () => {
+      window.__finaiInstallPrompt = undefined;
+      window.dispatchEvent(new Event(installAvailabilityEvent));
+    };
+    window.addEventListener("beforeinstallprompt", handleInstallPrompt);
+    window.addEventListener("appinstalled", handleInstalled);
 
-    navigator.serviceWorker.register("/sw.js").catch((error: unknown) => {
-      console.error("Falha ao ativar o modo offline:", error);
-    });
+    if (!import.meta.env.DEV && "serviceWorker" in navigator &&
+      !(window as Window & { __lovableEvents?: unknown }).__lovableEvents) {
+      navigator.serviceWorker.register("/sw.js").catch((error: unknown) => {
+        console.error("Falha ao ativar o modo offline:", error);
+      });
+    }
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
   }, []);
 
   return (

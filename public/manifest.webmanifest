@@ -11,6 +11,6 @@
   "theme_color": "#141c1f",
   "lang": "pt-BR",
   "icons": [
-    { "src": "/finai-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/finai-icon.svg", "sizes": "any 192x192 512x512", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
