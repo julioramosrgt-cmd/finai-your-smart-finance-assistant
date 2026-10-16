@@ -39,7 +39,7 @@ function Extrato() {
       <PageHeader
         title={acc.name}
         subtitle={acc.institution_name}
-        actions={<><MonthPicker value={ym} onChange={setYm} /><Button variant="outline" asChild><Link to="/importar"><FileUp /> Importar extrato</Link></Button><Button onClick={() => setOpen(true)}><Plus /> Lançar</Button></>}
+        actions={<><MonthPicker value={ym} onChange={setYm} /><Button variant="outline" asChild><Link to="/importar" search={{ target: `acc:${acc.id}` }}><FileUp /> Importar extrato</Link></Button><Button onClick={() => setOpen(true)}><Plus /> Lançar</Button></>}
       />
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl border bg-card p-4">

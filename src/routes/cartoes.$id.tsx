@@ -59,7 +59,7 @@ function Fatura() {
       <PageHeader
         title={`Cartão ${card.name}`}
         subtitle={`${card.institution_name} · fecha dia ${card.closing_day} · vence dia ${card.due_day}`}
-        actions={<><MonthPicker value={ym} onChange={setYm} /><Button variant="outline" asChild><Link to="/importar"><FileUp /> Importar PDF</Link></Button><Button onClick={() => setOpen(true)}><Plus /> Compra</Button></>}
+        actions={<><MonthPicker value={ym} onChange={setYm} /><Button variant="outline" asChild><Link to="/importar" search={{ target: `card:${card.id}` }}><FileUp /> Importar PDF</Link></Button><Button onClick={() => setOpen(true)}><Plus /> Compra</Button></>}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-4">

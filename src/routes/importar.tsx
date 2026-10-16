@@ -18,6 +18,9 @@ import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/use-profile";
 
 export const Route = createFileRoute("/importar")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    target: typeof search.target === "string" ? search.target : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Importar e conciliar — FinAI" },
@@ -39,7 +42,8 @@ const LABEL: Record<ReconRow["status"], { text: string; cls: string }> = {
 function Importar() {
   const data = useData();
   const profile = useProfile();
-  const [target, setTarget] = useState("");
+  const { target: initialTarget } = Route.useSearch();
+  const [target, setTarget] = useState(initialTarget ?? "");
   const [rows, setRows] = useState<ReconRow[]>([]);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);

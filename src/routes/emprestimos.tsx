@@ -40,7 +40,7 @@ function Loans() {
       <PageHeader
         title="Empréstimos e financiamentos"
         subtitle="Acompanhe seus contratos, saldo devedor e parcelas restantes."
-        actions={<><Button variant="outline" asChild><Link to="/importar"><FileUp /> Importar demonstrativo PDF</Link></Button><Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus /> Novo contrato</Button></>}
+        actions={<><Button variant="outline" asChild><Link to="/importar" search={{ target: "loan:new" }}><FileUp /> Importar demonstrativo PDF</Link></Button><Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus /> Novo contrato</Button></>}
       />
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-4">
@@ -78,6 +78,7 @@ function Loans() {
                 {contract.next_due_date && <Metric label="Próximo vencimento" value={new Date(`${contract.next_due_date}T12:00:00`).toLocaleDateString("pt-BR")} />}
                 {contract.interest_rate !== undefined && <Metric label="Juros informados" value={`${contract.interest_rate}% a.m.`} />}
               </div>
+              <Button className="mt-4" variant="outline" size="sm" asChild><Link to="/importar" search={{ target: `loan:${contract.id}` }}><FileUp /> Importar demonstrativo PDF</Link></Button>
               {contract.notes && <p className="mt-4 border-t pt-3 text-sm text-muted-foreground">{contract.notes}</p>}
             </article>
           ))}
