@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { buildSnapshot, todayISO } from "@/lib/finance";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/hooks/use-profile";
 
 export function InsightsCards() {
   const today = todayISO();
-  const rec = useLiveQuery(() => db.insights.get(today), [today]);
+  const profile = useProfile();
+  const insightId = `${profile}:${today}`;
+  const rec = useLiveQuery(() => db.insights.get(insightId), [insightId]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,11 +22,11 @@ export function InsightsCards() {
       const res = await fetch("/api/insights", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ snapshot: await buildSnapshot() }),
+        body: JSON.stringify({ snapshot: await buildSnapshot(profile) }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      await db.insights.put({ id: today, items: json.insights });
+      await db.insights.put({ id: insightId, items: json.insights });
     } catch (e) {
       setError((e as Error).message || "Não foi possível gerar insights.");
     } finally {

@@ -14,6 +14,7 @@ import { buildTransactions } from "@/lib/finance";
 import { parseCSV, parseOFX, parsePDF, reconcile, type ReconRow } from "@/lib/importers";
 import { dateBR, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/hooks/use-profile";
 
 export const Route = createFileRoute("/importar")({
   head: () => ({
@@ -36,6 +37,7 @@ const LABEL: Record<ReconRow["status"], { text: string; cls: string }> = {
 
 function Importar() {
   const data = useData();
+  const profile = useProfile();
   const [target, setTarget] = useState("");
   const [rows, setRows] = useState<ReconRow[]>([]);
   const [sel, setSel] = useState<Set<string>>(new Set());
@@ -86,7 +88,7 @@ function Importar() {
           paid: true,
           paid_at: r.date,
         });
-        await db.transactions.bulkAdd(txs);
+        await db.transactions.bulkAdd(txs.map((transaction) => ({ ...transaction, profile })));
         created++;
       }
     }

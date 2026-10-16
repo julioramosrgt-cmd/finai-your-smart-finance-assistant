@@ -14,6 +14,7 @@ import { db, factoryReset, uid } from "@/lib/db";
 import { accountBalance, currentMonth, invoiceTotal, todayISO } from "@/lib/finance";
 import { money, parseMoney } from "@/lib/format";
 import { biometricAvailable, hashPin, registerBiometric } from "@/lib/security";
+import { useProfile } from "@/hooks/use-profile";
 
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
@@ -38,6 +39,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Config() {
   const data = useData();
+  const profile = useProfile();
   const [pin, setPin] = useState("");
   const [bioOk, setBioOk] = useState(false);
   const [adjTarget, setAdjTarget] = useState("");
@@ -67,6 +69,7 @@ function Config() {
     const card = data!.cards.find((c) => c.id === id);
     await db.transactions.add({
       id: uid(),
+      profile,
       description: "Ajuste manual de saldo",
       amount: Math.abs(diff),
       date: today,
@@ -91,12 +94,12 @@ function Config() {
 
   async function exportJSON() {
     const dump = {
-      accounts: await db.accounts.toArray(),
-      cards: await db.cards.toArray(),
-      loanContracts: await db.loanContracts.toArray(),
-      categories: await db.categories.toArray(),
-      subcategories: await db.subcategories.toArray(),
-      transactions: await db.transactions.toArray(),
+      accounts: data!.accounts,
+      cards: data!.cards,
+      loanContracts: data!.loanContracts,
+      categories: data!.categories,
+      subcategories: data!.subcategories,
+      transactions: data!.transactions,
     };
     const url = URL.createObjectURL(new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" }));
     const a = document.createElement("a");

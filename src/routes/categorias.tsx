@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/hooks/use-data";
 import { PageHeader } from "@/components/finai/PageHeader";
 import { db, uid } from "@/lib/db";
+import { useProfile } from "@/hooks/use-profile";
 
 export const Route = createFileRoute("/categorias")({
   head: () => ({
@@ -37,6 +38,7 @@ function InlineEdit({ value, onSave, onCancel }: { value: string; onSave: (v: st
 
 function Categorias() {
   const data = useData();
+  const profile = useProfile();
   const [kind, setKind] = useState<"expense" | "income">("expense");
   const [newCat, setNewCat] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -46,7 +48,7 @@ function Categorias() {
 
   async function addCat() {
     if (!newCat.trim()) return;
-    await db.categories.add({ id: uid(), name: newCat.trim(), kind, color: COLORS[cats.length % COLORS.length], sort_order: Math.max(-1, ...cats.map((category, index) => category.sort_order ?? index)) + 1 });
+    await db.categories.add({ id: uid(), profile, name: newCat.trim(), kind, color: COLORS[cats.length % COLORS.length], sort_order: Math.max(-1, ...cats.map((category, index) => category.sort_order ?? index)) + 1 });
     setNewCat("");
   }
   async function delCat(id: string) {
@@ -127,7 +129,7 @@ function Categorias() {
                 onKeyDown={async (e) => {
                   if (e.key === "Enter" && newSub[c.id]?.trim()) {
                     const subcategories = data.subcategories.filter((sub) => sub.category_id === c.id);
-                    await db.subcategories.add({ id: uid(), category_id: c.id, name: newSub[c.id].trim(), sort_order: Math.max(-1, ...subcategories.map((sub, index) => sub.sort_order ?? index)) + 1 });
+                    await db.subcategories.add({ id: uid(), profile, category_id: c.id, name: newSub[c.id].trim(), sort_order: Math.max(-1, ...subcategories.map((sub, index) => sub.sort_order ?? index)) + 1 });
                     setNewSub({ ...newSub, [c.id]: "" });
                   }
                 }}
@@ -135,7 +137,7 @@ function Categorias() {
               <Button size="sm" variant="secondary" className="h-8" onClick={async () => {
                 if (!newSub[c.id]?.trim()) return;
                 const subcategories = data.subcategories.filter((sub) => sub.category_id === c.id);
-                await db.subcategories.add({ id: uid(), category_id: c.id, name: newSub[c.id].trim(), sort_order: Math.max(-1, ...subcategories.map((sub, index) => sub.sort_order ?? index)) + 1 });
+                await db.subcategories.add({ id: uid(), profile, category_id: c.id, name: newSub[c.id].trim(), sort_order: Math.max(-1, ...subcategories.map((sub, index) => sub.sort_order ?? index)) + 1 });
                 setNewSub({ ...newSub, [c.id]: "" });
               }}><Plus /></Button>
             </div>

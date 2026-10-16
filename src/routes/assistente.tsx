@@ -11,6 +11,7 @@ import { Loader } from "@/components/ai-elements/loader";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { buildSnapshot } from "@/lib/finance";
+import { useProfile } from "@/hooks/use-profile";
 
 export const Route = createFileRoute("/assistente")({
   head: () => ({
@@ -25,18 +26,26 @@ export const Route = createFileRoute("/assistente")({
 });
 
 function AssistentePage() {
+  const profile = useProfile();
+  const chatId = `main-${profile}`;
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const [key, setKey] = useState(0);
   useEffect(() => {
-    db.chat.get("main").then((r) => setInitial((r?.messages as UIMessage[]) ?? []));
-  }, [key]);
+    setInitial(null);
+    Promise.all([db.chat.get(chatId), profile === "PF" ? db.chat.get("main") : Promise.resolve(undefined)]).then(([current, legacy]) => {
+      const record = current ?? legacy;
+      setInitial((record?.messages as UIMessage[]) ?? []);
+    });
+  }, [key, chatId]);
   if (!initial) return null;
   return (
     <Chat
-      key={key}
+      key={`${key}-${profile}`}
       initial={initial}
+      profile={profile}
+      chatId={chatId}
       onClear={async () => {
-        await db.chat.delete("main");
+        await db.chat.delete(chatId);
         setInitial(null);
         setKey((k) => k + 1);
       }}
@@ -46,21 +55,21 @@ function AssistentePage() {
 
 const SUGGESTIONS = ["Quanto gastei com mercado este mês?", "Consigo economizar R$ 500 no próximo mês?", "Qual fatura priorizar para não pagar juros?"];
 
-function Chat({ initial, onClear }: { initial: UIMessage[]; onClear: () => void }) {
+function Chat({ initial, onClear, profile, chatId }: { initial: UIMessage[]; onClear: () => void; profile: import("@/lib/db").Profile; chatId: string }) {
   const [input, setInput] = useState("");
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
-        prepareSendMessagesRequest: async ({ messages }) => ({ body: { messages, snapshot: await buildSnapshot() } }),
+        prepareSendMessagesRequest: async ({ messages }) => ({ body: { messages, snapshot: await buildSnapshot(profile) } }),
       }),
-    [],
+    [profile],
   );
-  const { messages, sendMessage, status, error, stop } = useChat({ id: "main", messages: initial, transport });
+  const { messages, sendMessage, status, error, stop } = useChat({ id: chatId, messages: initial, transport });
 
   useEffect(() => {
-    if (status === "ready" && messages.length) void db.chat.put({ id: "main", messages });
-  }, [status, messages]);
+    if (status === "ready" && messages.length) void db.chat.put({ id: chatId, messages });
+  }, [status, messages, chatId]);
 
   const send = (text: string) => {
     if (!text.trim()) return;

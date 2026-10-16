@@ -18,6 +18,8 @@ import { setCurrency } from "@/lib/format";
 import { UNLOCK_KEY } from "@/lib/security";
 import { LockScreen } from "./LockScreen";
 import { cn } from "@/lib/utils";
+import { useProfile, setActiveProfile } from "@/hooks/use-profile";
+import { seedCategories, type Profile } from "@/lib/db";
 
 const NAV = [
   { title: "Painel", url: "/", icon: LayoutDashboard },
@@ -48,6 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const data = useData();
+  const profile = useProfile();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const lock = useCallback(() => {
@@ -145,6 +148,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
             <SidebarTrigger className="hidden md:inline-flex" />
             <Logo className="md:hidden" />
+            <div role="group" aria-label="Perfil financeiro" className="ml-auto flex rounded-full border bg-muted p-0.5">
+              {(["PF", "PJ"] as Profile[]).map((item) => (
+                <button key={item} type="button" aria-pressed={profile === item} onClick={() => { setActiveProfile(item); void seedCategories(item); }} className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-colors", profile === item ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                  {item}
+                </button>
+              ))}
+            </div>
             <div className="ml-auto flex items-center gap-1 md:hidden">
               <Link to="/emprestimos" className="rounded-lg p-2 text-muted-foreground" aria-label="Empréstimos e financiamentos">
                 <Banknote className="h-5 w-5" />

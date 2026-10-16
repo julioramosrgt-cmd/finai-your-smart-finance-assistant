@@ -4,9 +4,11 @@ export type AccountKind = "checking" | "benefit_card" | "loan" | "investment";
 export type TxType = "income" | "expense" | "transfer";
 export type TxStatus = "pending" | "paid" | "overdue";
 export type Period = "weekly" | "monthly" | "yearly";
+export type Profile = "PF" | "PJ";
 
 export interface Account {
   id: string;
+  profile?: Profile;
   name: string;
   kind: AccountKind;
   institution_name: string;
@@ -17,6 +19,7 @@ export interface Account {
 
 export interface Card {
   id: string;
+  profile?: Profile;
   name: string;
   institution_name: string;
   limit: number;
@@ -28,6 +31,7 @@ export interface Card {
 
 export interface LoanContract {
   id: string;
+  profile?: Profile;
   name: string;
   institution_name: string;
   kind: string;
@@ -44,6 +48,7 @@ export interface LoanContract {
 
 export interface Category {
   id: string;
+  profile?: Profile;
   name: string;
   kind: "income" | "expense";
   color: string;
@@ -53,6 +58,7 @@ export interface Category {
 
 export interface Subcategory {
   id: string;
+  profile?: Profile;
   category_id: string;
   name: string;
   behavior?: "fixed" | "variable";
@@ -61,6 +67,7 @@ export interface Subcategory {
 
 export interface Transaction {
   id: string;
+  profile?: Profile;
   description: string;
   amount: number;
   date: string; // competência (YYYY-MM-DD)
@@ -102,7 +109,7 @@ export interface Settings {
 }
 
 export interface ChatRecord {
-  id: "main";
+  id: string;
   messages: unknown[];
 }
 
@@ -145,6 +152,26 @@ class FinDB extends Dexie {
       chat: "id",
       insights: "id",
     });
+    this.version(3).stores({
+      accounts: "id, profile",
+      cards: "id, profile",
+      loanContracts: "id, profile, institution_name, kind, created_at",
+      categories: "id, profile, kind",
+      subcategories: "id, profile, category_id",
+      transactions: "id, profile, date, due_date, account_id, card_id, series_id, invoice_month, category_id, status",
+      settings: "id",
+      chat: "id",
+      insights: "id",
+    }).upgrade(async (tx) => {
+      await Promise.all([
+        tx.table("accounts").toCollection().modify((item) => { item.profile ??= "PF"; }),
+        tx.table("cards").toCollection().modify((item) => { item.profile ??= "PF"; }),
+        tx.table("loanContracts").toCollection().modify((item) => { item.profile ??= "PF"; }),
+        tx.table("categories").toCollection().modify((item) => { item.profile ??= "PF"; }),
+        tx.table("subcategories").toCollection().modify((item) => { item.profile ??= "PF"; }),
+        tx.table("transactions").toCollection().modify((item) => { item.profile ??= "PF"; }),
+      ]);
+    });
   }
 }
 
@@ -171,14 +198,16 @@ export const DEFAULT_CATEGORIES: { name: string; kind: "income" | "expense"; col
   { name: "Outras receitas", kind: "income", color: "chart-3", subs: [] },
 ];
 
-export async function seedCategories() {
-  const count = await db.categories.count();
+export async function seedCategories(profile: Profile = "PF") {
+  await db.transaction("rw", db.categories, db.subcategories, async () => {
+  const count = await db.categories.where("profile").equals(profile).count();
   if (count > 0) return;
   for (const c of DEFAULT_CATEGORIES) {
     const id = uid();
-    await db.categories.add({ id, name: c.name, kind: c.kind, color: c.color });
-    await db.subcategories.bulkAdd(c.subs.map((name) => ({ id: uid(), category_id: id, name })));
+    await db.categories.add({ id, profile, name: c.name, kind: c.kind, color: c.color });
+    await db.subcategories.bulkAdd(c.subs.map((name) => ({ id: uid(), profile, category_id: id, name })));
   }
+  });
 }
 
 export async function factoryReset() {

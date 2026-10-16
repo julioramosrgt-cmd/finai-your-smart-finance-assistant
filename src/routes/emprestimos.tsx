@@ -11,6 +11,7 @@ import { EmptyState, PageHeader } from "@/components/finai/PageHeader";
 import { useData } from "@/hooks/use-data";
 import { db, uid, type LoanContract } from "@/lib/db";
 import { money, parseMoney } from "@/lib/format";
+import { useProfile } from "@/hooks/use-profile";
 
 export const Route = createFileRoute("/emprestimos")({
   head: () => ({ meta: [{ title: "Empréstimos e financiamentos — FinAI" }] }),
@@ -111,6 +112,7 @@ const emptyForm: LoanFormValues = {
 };
 
 function LoanForm({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (open: boolean) => void; editing: LoanContract | null }) {
+  const profile = useProfile();
   const [form, setForm] = useState<LoanFormValues>(emptyForm);
   const set = (key: keyof LoanFormValues, value: string) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -140,6 +142,7 @@ function LoanForm({ open, onOpenChange, editing }: { open: boolean; onOpenChange
     if (total !== undefined && (!Number.isInteger(total) || total < remaining)) return toast.error("O total de parcelas deve ser inteiro e maior ou igual às parcelas restantes.");
     const contract: LoanContract = {
       id: editing?.id ?? uid(),
+      profile: editing?.profile ?? profile,
       name: form.name.trim(),
       institution_name: form.institution_name.trim(),
       kind: form.kind,

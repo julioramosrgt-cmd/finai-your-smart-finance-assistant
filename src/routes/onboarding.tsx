@@ -48,6 +48,7 @@ function Onboarding() {
     await seedCategories();
     await db.accounts.add({
       id: uid(),
+      profile: "PF",
       name: accName.trim() || "Conta principal",
       kind: accKind,
       institution_name: accBank.trim(),
@@ -57,6 +58,7 @@ function Onboarding() {
     if (addCard && card.name) {
       await db.cards.add({
         id: uid(),
+        profile: "PF",
         name: card.name,
         institution_name: card.bank,
         limit: parseMoney(card.limit),

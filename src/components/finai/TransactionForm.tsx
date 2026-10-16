@@ -11,6 +11,7 @@ import { db, type Period, type Transaction, type TxType } from "@/lib/db";
 import { buildTransactions, normalizeTx, todayISO } from "@/lib/finance";
 import { parseMoney } from "@/lib/format";
 import { useData } from "@/hooks/use-data";
+import { useProfile } from "@/hooks/use-profile";
 
 type Scope = "one" | "series";
 
@@ -26,6 +27,7 @@ export function TransactionForm({
   defaultSource?: string; // "acc:id" | "card:id"
 }) {
   const data = useData();
+  const profile = useProfile();
   const [type, setType] = useState<TxType>("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -88,6 +90,18 @@ export function TransactionForm({
       return;
     }
     const [kind, id] = source.split(":");
+    if (kind === "acc" && !data?.accounts.some((account) => account.id === id)) {
+      toast.error("Selecione uma conta do perfil ativo.");
+      return;
+    }
+    if (kind === "card" && !data?.cards.some((card) => card.id === id)) {
+      toast.error("Selecione um cartão do perfil ativo.");
+      return;
+    }
+    if (type === "transfer" && !data?.accounts.some((account) => account.id === toAccount)) {
+      toast.error("Selecione uma conta de destino do perfil ativo.");
+      return;
+    }
     if (editing) {
       const patch = {
         type,
@@ -139,7 +153,7 @@ export function TransactionForm({
         recurring: recurring === "none" ? undefined : recurring,
         paid,
       });
-      await db.transactions.bulkAdd(txs);
+      await db.transactions.bulkAdd(txs.map((transaction) => ({ ...transaction, profile })));
       toast.success(txs.length > 1 ? `${txs.length} lançamentos projetados.` : "Lançamento criado.");
     }
     onOpenChange(false);

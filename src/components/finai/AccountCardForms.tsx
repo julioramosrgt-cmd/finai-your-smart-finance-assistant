@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { db, uid, type Account, type AccountKind, type Card } from "@/lib/db";
 import { normalizeTx } from "@/lib/finance";
 import { parseMoney } from "@/lib/format";
+import { useProfile } from "@/hooks/use-profile";
 
 export const KIND_LABEL: Record<AccountKind, string> = {
   checking: "Conta corrente",
@@ -21,6 +22,7 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
   const [bank, setBank] = useState("");
   const [kind, setKind] = useState<AccountKind>("checking");
   const [bal, setBal] = useState("");
+  const profile = useProfile();
   useEffect(() => {
     if (!open) return;
     setName(editing?.name ?? "");
@@ -30,9 +32,10 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
   }, [open, editing]);
   async function save() {
     if (!name.trim()) return toast.error("Informe o nome.");
-    const accounts = await db.accounts.toArray();
+    const accounts = await db.accounts.where("profile").equals(editing?.profile ?? profile).toArray();
     const acc: Account = {
       id: editing?.id ?? uid(),
+      profile: editing?.profile ?? profile,
       name: name.trim(),
       institution_name: bank.trim(),
       kind,
@@ -72,6 +75,7 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
 }
 
 export function CardForm({ open, onOpenChange, editing }: { open: boolean; onOpenChange: (o: boolean) => void; editing?: Card | null }) {
+  const profile = useProfile();
   const [f, setF] = useState({ name: "", bank: "", limit: "", closing: "5", due: "12" });
   useEffect(() => {
     if (!open) return;
@@ -83,9 +87,10 @@ export function CardForm({ open, onOpenChange, editing }: { open: boolean; onOpe
   }, [open, editing]);
   async function save() {
     if (!f.name.trim()) return toast.error("Informe o nome.");
-    const cards = await db.cards.toArray();
+    const cards = await db.cards.where("profile").equals(editing?.profile ?? profile).toArray();
     const card: Card = {
       id: editing?.id ?? uid(),
+      profile: editing?.profile ?? profile,
       name: f.name.trim(),
       institution_name: f.bank.trim(),
       limit: parseMoney(f.limit),

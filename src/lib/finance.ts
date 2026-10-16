@@ -217,11 +217,13 @@ export async function payInvoice(card: Card, ym: string, accountId: string, paid
   const open = txs.filter((t) => t.card_id === card.id && t.status !== "paid");
   const total = open.reduce((s, t) => s + (t.type === "income" ? -t.amount : t.amount), 0);
   const acc = await db.accounts.get(accountId);
+  if (!acc || (acc.profile ?? "PF") !== (card.profile ?? "PF")) throw new Error("Conta e cartão precisam pertencer ao mesmo perfil financeiro.");
   await db.transaction("rw", db.transactions, async () => {
     for (const t of open) await db.transactions.update(t.id, { status: "paid", paid_at: paidAt });
     if (total > 0 && acc) {
       await db.transactions.add({
         id: uid(),
+        profile: card.profile ?? "PF",
         description: `Pagamento fatura ${card.name} (${ym})`,
         amount: Math.round(total * 100) / 100,
         date: paidAt,
@@ -332,26 +334,31 @@ export function buildAlerts(cards: Card[], txs: Transaction[]): Alert[] {
 }
 
 // ---------- snapshot para a IA ----------
-export async function buildSnapshot() {
+export async function buildSnapshot(profile: import("@/lib/db").Profile = "PF") {
   const [accounts, cards, categories, subcategories, txs, settings] = await Promise.all([
-    db.accounts.toArray(),
-    db.cards.toArray(),
-    db.categories.toArray(),
-    db.subcategories.toArray(),
-    db.transactions.toArray(),
+    db.accounts.where("profile").equals(profile).toArray(),
+    db.cards.where("profile").equals(profile).toArray(),
+    db.categories.where("profile").equals(profile).toArray(),
+    db.subcategories.where("profile").equals(profile).toArray(),
+    db.transactions.where("profile").equals(profile).toArray(),
     db.settings.get("app"),
   ]);
+  const profileAccounts = accounts;
+  const profileCards = cards;
+  const profileCategories = categories;
+  const profileSubcategories = subcategories;
+  const profileTxs = txs;
   const today = todayISO();
   const cm = currentMonth();
-  const catName = (id?: string) => categories.find((c) => c.id === id)?.name ?? "";
-  const subName = (id?: string) => subcategories.find((c) => c.id === id)?.name ?? "";
+  const catName = (id?: string) => profileCategories.find((c) => c.id === id)?.name ?? "";
+  const subName = (id?: string) => profileSubcategories.find((c) => c.id === id)?.name ?? "";
   const months = [-3, -2, -1, 0, 1, 2, 3].map((n) => shiftMonth(cm, n));
   return {
     hoje: today,
     moeda: settings?.currency ?? "BRL",
-    contas: accounts.map((a) => ({ nome: a.name, tipo: a.kind, banco: a.institution_name, saldo_atual: accountBalance(a, txs) })),
-    cartoes: cards.map((c) => {
-      const u = cardUsage(c, txs);
+    contas: profileAccounts.map((a) => ({ nome: a.name, tipo: a.kind, banco: a.institution_name, saldo_atual: accountBalance(a, profileTxs) })),
+    cartoes: profileCards.map((c) => {
+      const u = cardUsage(c, profileTxs);
       return {
         nome: c.name,
         banco: c.institution_name,
@@ -360,11 +367,11 @@ export async function buildSnapshot() {
         disponivel: u.available,
         fechamento: c.closing_day,
         vencimento: c.due_day,
-        faturas: months.map((m) => ({ mes: m, aberto: invoiceTotal(c.id, m, txs) })).filter((f) => f.aberto !== 0),
+        faturas: months.map((m) => ({ mes: m, aberto: invoiceTotal(c.id, m, profileTxs) })).filter((f) => f.aberto !== 0),
       };
     }),
-    meses: months.map((m) => ({ mes: m, ...periodMetrics(m, accounts, cards, txs), por_categoria: categoryBreakdown(m, txs, categories).map((c) => ({ categoria: c.name, valor: c.value })) })),
-    lancamentos: txs
+    meses: months.map((m) => ({ mes: m, ...periodMetrics(m, profileAccounts, profileCards, profileTxs), por_categoria: categoryBreakdown(m, profileTxs, profileCategories).map((c) => ({ categoria: c.name, valor: c.value })) })),
+    lancamentos: profileTxs
       .filter((t) => t.date >= `${shiftMonth(cm, -6)}-01` && t.date <= monthEnd(shiftMonth(cm, 12)))
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-900)
@@ -376,7 +383,7 @@ export async function buildSnapshot() {
         tipo: t.type,
         cat: catName(t.category_id),
         sub: subName(t.subcategory_id),
-        origem: cards.find((c) => c.id === t.card_id)?.name ?? accounts.find((a) => a.id === t.account_id)?.name ?? "",
+        origem: profileCards.find((c) => c.id === t.card_id)?.name ?? profileAccounts.find((a) => a.id === t.account_id)?.name ?? "",
         status: effectiveStatus(t, today),
         rec: t.is_recurring ? t.recurrence_period : undefined,
         parc: t.is_installment ? `${t.current_installment}/${t.total_installments}` : undefined,
