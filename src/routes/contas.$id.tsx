@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, FileUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/hooks/use-data";
 import { MonthPicker } from "@/components/finai/MonthPicker";
@@ -39,7 +39,7 @@ function Extrato() {
       <PageHeader
         title={acc.name}
         subtitle={acc.institution_name}
-        actions={<><MonthPicker value={ym} onChange={setYm} /><Button onClick={() => setOpen(true)}><Plus /> Lançar</Button></>}
+        actions={<><MonthPicker value={ym} onChange={setYm} /><Button variant="outline" asChild><Link to="/importar"><FileUp /> Importar extrato</Link></Button><Button onClick={() => setOpen(true)}><Plus /> Lançar</Button></>}
       />
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl border bg-card p-4">

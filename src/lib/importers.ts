@@ -8,6 +8,8 @@ export interface ImportedRow {
   description: string;
   amount: number;
   type: "income" | "expense";
+  current_installment?: number;
+  total_installments?: number;
 }
 
 const toISODate = (s: string) => {
@@ -33,7 +35,7 @@ export function parseOFX(text: string): ImportedRow[] {
       return {
         date: toISODate(tag(b, "DTPOSTED")),
         description: tag(b, "MEMO") || tag(b, "NAME") || "Sem descrição",
-        amount: Math.abs(amt),
+      amount: Math.abs(amt),
         type: (amt >= 0 ? "income" : "expense") as ImportedRow["type"],
       };
     })
@@ -84,15 +86,44 @@ export async function pdfToText(file: File) {
 }
 
 export async function parsePDF(file: File): Promise<ImportedRow[]> {
+  return parsePDFTransactions(file);
+}
+
+export interface ExtractedLoanDetails {
+  name: string | null;
+  institution_name: string | null;
+  kind: string | null;
+  original_amount: number | null;
+  outstanding_balance: number | null;
+  installment_amount: number | null;
+  total_installments: number | null;
+  installments_remaining: number | null;
+  installments_paid: number | null;
+  next_due_date: string | null;
+  interest_rate: number | null;
+}
+
+async function extractPDF<T>(file: File, documentType: "transactions" | "loan"): Promise<T> {
   const text = await pdfToText(file);
+  if (!text.trim()) throw new Error("O PDF não contém texto selecionável. PDFs digitalizados exigem OCR, ainda não disponível.");
   const res = await fetch("/api/extract", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, documentType }),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Falha ao ler o PDF");
-  return json.transactions;
+  return json;
+}
+
+async function parsePDFTransactions(file: File): Promise<ImportedRow[]> {
+  const result = await extractPDF<{ transactions: ImportedRow[] }>(file, "transactions");
+  return result.transactions;
+}
+
+export async function parseLoanPDF(file: File): Promise<ExtractedLoanDetails> {
+  const result = await extractPDF<{ loan: ExtractedLoanDetails }>(file, "loan");
+  return result.loan;
 }
 
 export type MatchStatus = "matched" | "diff_amount" | "missing" | "duplicate";

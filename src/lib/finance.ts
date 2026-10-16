@@ -67,6 +67,7 @@ export interface TxInput {
   category_id: string;
   subcategory_id?: string;
   installments: number;
+  firstInstallment?: number;
   recurring?: Period;
   paid: boolean;
   paid_at?: string;
@@ -128,14 +129,16 @@ export async function buildTransactions(input: TxInput): Promise<Transaction[]> 
 
   if (input.installments > 1) {
     const n = input.installments;
+    const first = Math.min(n, Math.max(1, input.firstInstallment ?? 1));
     const each = Math.floor((input.amount / n) * 100) / 100;
     const last = Math.round((input.amount - each * (n - 1)) * 100) / 100;
-    for (let i = 0; i < n; i++) {
-      make(i, i === n - 1 ? last : each, addMonthsISO(input.date, i), addMonthsISO(input.due_date, i), {
+    for (let index = first; index <= n; index++) {
+      const offset = index - first;
+      make(offset, index === n ? last : each, addMonthsISO(input.date, offset), addMonthsISO(input.due_date, offset), {
         is_installment: true,
-        current_installment: i + 1,
+        current_installment: index,
         total_installments: n,
-        description: `${base.description} (${i + 1}/${n})`,
+        description: `${base.description} (${index}/${n})`,
       });
     }
   } else if (input.recurring) {

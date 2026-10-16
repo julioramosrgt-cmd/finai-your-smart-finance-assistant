@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Banknote, Pencil, Plus, Trash2 } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Banknote, FileUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -40,7 +40,7 @@ function Loans() {
       <PageHeader
         title="Empréstimos e financiamentos"
         subtitle="Acompanhe seus contratos, saldo devedor e parcelas restantes."
-        actions={<Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus /> Novo contrato</Button>}
+        actions={<><Button variant="outline" asChild><Link to="/importar"><FileUp /> Importar demonstrativo PDF</Link></Button><Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus /> Novo contrato</Button></>}
       />
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-4">
