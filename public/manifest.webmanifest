@@ -1,0 +1,18 @@
+{
+  "name": "FinAI — Finanças com IA",
+  "short_name": "FinAI",
+  "description": "Gestão financeira PF/PJ com competência, conciliação e assistente de IA.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141c1f",
+  "theme_color": "#141c1f",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
