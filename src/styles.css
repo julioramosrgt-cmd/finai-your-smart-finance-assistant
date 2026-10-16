@@ -168,6 +168,11 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
+
+.hide-values .num {
+  filter: blur(0.45rem);
+  user-select: none;
+}
 @utility pb-safe {
   padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
 }

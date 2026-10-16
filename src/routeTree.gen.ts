@@ -15,6 +15,7 @@ import { Route as CategoriasRouteImport } from './routes/categorias'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ImportarRouteImport } from './routes/importar'
 import { Route as LancamentosRouteImport } from './routes/lancamentos'
+import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiExtractRouteImport } from './routes/api/extract'
@@ -51,6 +52,11 @@ const ImportarRoute = ImportarRouteImport.update({
 const LancamentosRoute = LancamentosRouteImport.update({
   id: '/lancamentos',
   path: '/lancamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatoriosRoute = RelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/importar': typeof ImportarRoute
   '/lancamentos': typeof LancamentosRoute
+  '/relatorios': typeof RelatoriosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
   '/api/extract': typeof ApiExtractRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/importar': typeof ImportarRoute
   '/lancamentos': typeof LancamentosRoute
+  '/relatorios': typeof RelatoriosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
   '/api/extract': typeof ApiExtractRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/importar': typeof ImportarRoute
   '/lancamentos': typeof LancamentosRoute
+  '/relatorios': typeof RelatoriosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
   '/api/extract': typeof ApiExtractRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/importar'
     | '/lancamentos'
+    | '/relatorios'
     | '/onboarding'
     | '/api/chat'
     | '/api/extract'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/importar'
     | '/lancamentos'
+    | '/relatorios'
     | '/onboarding'
     | '/api/chat'
     | '/api/extract'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/importar'
     | '/lancamentos'
+    | '/relatorios'
     | '/onboarding'
     | '/api/chat'
     | '/api/extract'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ImportarRoute: typeof ImportarRoute
   LancamentosRoute: typeof LancamentosRoute
+  RelatoriosRoute: typeof RelatoriosRoute
   OnboardingRoute: typeof OnboardingRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiExtractRoute: typeof ApiExtractRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/lancamentos'
       fullPath: '/lancamentos'
       preLoaderRoute: typeof LancamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   ImportarRoute: ImportarRoute,
   LancamentosRoute: LancamentosRoute,
+  RelatoriosRoute: RelatoriosRoute,
   OnboardingRoute: OnboardingRoute,
   ApiChatRoute: ApiChatRoute,
   ApiExtractRoute: ApiExtractRoute,

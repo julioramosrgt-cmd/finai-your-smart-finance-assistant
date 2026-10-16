@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/hooks/use-data";
 import { PageHeader } from "@/components/finai/PageHeader";
@@ -85,6 +86,10 @@ function Categorias() {
               ) : (
                 <>
                   <p className="flex-1 font-semibold">{c.name}</p>
+                  {kind === "expense" && <Select value={c.behavior ?? "variable"} onValueChange={(value) => db.categories.update(c.id, { behavior: value as "fixed" | "variable" })}>
+                    <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="fixed">Fixa</SelectItem><SelectItem value="variable">Variável</SelectItem></SelectContent>
+                  </Select>}
                   <Button aria-label="Mover categoria para cima" size="icon" variant="ghost" className="h-8 w-8" disabled={index === 0} onClick={() => move(cats, index, -1, (id, order) => db.categories.update(id, { sort_order: order }))}><ArrowUp /></Button>
                   <Button aria-label="Mover categoria para baixo" size="icon" variant="ghost" className="h-8 w-8" disabled={index === cats.length - 1} onClick={() => move(cats, index, 1, (id, order) => db.categories.update(id, { sort_order: order }))}><ArrowDown /></Button>
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditing(c.id)}><Pencil /></Button>
@@ -95,6 +100,10 @@ function Categorias() {
             <ul className="mt-2 space-y-1">
               {data.subcategories.filter((s) => s.category_id === c.id).map((item, index) => ({ ...item, sort_order: item.sort_order ?? index })).sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)).map((s, subIndex, subItems) => (
                 <li key={s.id} className="flex items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-accent">
+                  {kind === "expense" && <Select value={s.behavior ?? c.behavior ?? "variable"} onValueChange={(value) => db.subcategories.update(s.id, { behavior: value as "fixed" | "variable" })}>
+                    <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="fixed">Fixa</SelectItem><SelectItem value="variable">Variável</SelectItem></SelectContent>
+                  </Select>}
                   {editing === s.id ? (
                     <InlineEdit value={s.name} onCancel={() => setEditing(null)} onSave={async (v) => { await db.subcategories.update(s.id, { name: v }); setEditing(null); }} />
                   ) : (

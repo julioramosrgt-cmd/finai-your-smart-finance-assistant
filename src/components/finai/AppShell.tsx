@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bot, CreditCard, FileUp, LayoutDashboard, ListOrdered, Settings, Tags, Wallet } from "lucide-react";
+import { Bot, ChartNoAxesCombined, CreditCard, FileUp, LayoutDashboard, ListOrdered, Settings, Tags, Wallet } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { title: "Painel", url: "/", icon: LayoutDashboard },
   { title: "Lançamentos", url: "/lancamentos", icon: ListOrdered },
+  { title: "Relatórios", url: "/relatorios", icon: ChartNoAxesCombined },
   { title: "Assistente IA", url: "/assistente", icon: Bot },
   { title: "Contas e cartões", url: "/contas", icon: Wallet },
   { title: "Categorias", url: "/categorias", icon: Tags },
@@ -48,6 +49,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const data = useData();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const lock = useCallback(() => {
+    if (!data?.settings?.pin_hash || !data.settings.autoLockMinutes) return;
+    sessionStorage.removeItem(UNLOCK_KEY);
+    setUnlocked(false);
+  }, [data?.settings?.autoLockMinutes, data?.settings?.pin_hash]);
 
   useEffect(() => {
     setMounted(true);
@@ -62,9 +68,30 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [settings?.theme, settings?.currency]);
 
   useEffect(() => {
+    document.documentElement.classList.toggle("hide-values", !!settings?.hideValues);
+  }, [settings?.hideValues]);
+
+  useEffect(() => {
     if (!data) return;
     if (!data.settings?.onboarded && path !== "/onboarding") navigate({ to: "/onboarding" });
   }, [data, path, navigate]);
+
+  useEffect(() => {
+    const minutes = data?.settings?.autoLockMinutes ?? 0;
+    if (!unlocked || !data?.settings?.pin_hash || minutes <= 0) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(lock, minutes * 60_000);
+    };
+    const events: (keyof WindowEventMap)[] = ["pointerdown", "keydown", "touchstart", "mousemove"];
+    events.forEach((event) => window.addEventListener(event, reset, { passive: true }));
+    reset();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, reset));
+    };
+  }, [data?.settings?.autoLockMinutes, data?.settings?.pin_hash, lock, unlocked]);
 
   if (!mounted || !data) {
     return (
@@ -120,6 +147,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="ml-auto flex items-center gap-1 md:hidden">
               <Link to="/categorias" className="rounded-lg p-2 text-muted-foreground" aria-label="Categorias">
                 <Tags className="h-5 w-5" />
+              </Link>
+              <Link to="/relatorios" className="rounded-lg p-2 text-muted-foreground" aria-label="Relatórios">
+                <ChartNoAxesCombined className="h-5 w-5" />
               </Link>
               <Link to="/importar" className="rounded-lg p-2 text-muted-foreground" aria-label="Importar">
                 <FileUp className="h-5 w-5" />

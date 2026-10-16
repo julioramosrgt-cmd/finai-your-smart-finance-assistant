@@ -31,6 +31,7 @@ export interface Category {
   name: string;
   kind: "income" | "expense";
   color: string;
+  behavior?: "fixed" | "variable";
   sort_order?: number;
 }
 
@@ -38,6 +39,7 @@ export interface Subcategory {
   id: string;
   category_id: string;
   name: string;
+  behavior?: "fixed" | "variable";
   sort_order?: number;
 }
 
@@ -79,6 +81,8 @@ export interface Settings {
   webauthn_id?: string;
   theme: "dark" | "light";
   sound: boolean;
+  hideValues?: boolean;
+  autoLockMinutes?: number;
 }
 
 export interface ChatRecord {

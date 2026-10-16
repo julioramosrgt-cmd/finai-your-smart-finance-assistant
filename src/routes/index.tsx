@@ -9,9 +9,10 @@ import { PageHeader, EmptyState } from "@/components/finai/PageHeader";
 import { InsightsCards } from "@/components/finai/InsightsCards";
 import { TransactionForm } from "@/components/finai/TransactionForm";
 import { TransactionList } from "@/components/finai/TransactionList";
-import { buildAlerts, categoryBreakdown, currentMonth, monthKey, periodMetrics, shiftMonth } from "@/lib/finance";
+import { accountBalance, buildAlerts, cardUsage, categoryBreakdown, currentMonth, invoiceTotal, monthKey, periodMetrics, shiftMonth } from "@/lib/finance";
 import { dateBR, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { Transaction } from "@/lib/db";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -50,6 +51,10 @@ function Dashboard() {
   const m = useMemo(() => (data ? periodMetrics(ym, data.accounts, data.cards, data.transactions) : null), [data, ym]);
   const alerts = useMemo(() => (data ? buildAlerts(data.cards, data.transactions) : []), [data]);
   const cats = useMemo(() => (data ? categoryBreakdown(ym, data.transactions, data.categories) : []), [data, ym]);
+  const incomeCats = useMemo(() => (data ? categoryBreakdown(ym, data.transactions, data.categories, "income") : []), [data, ym]);
+  const behaviorFor = (tx: Transaction) => data?.subcategories.find((subcategory) => subcategory.id === tx.subcategory_id)?.behavior ?? data?.categories.find((category) => category.id === tx.category_id)?.behavior ?? "variable";
+  const variableCosts = data?.transactions.filter((t) => t.type === "expense" && monthKey(t.date) === ym && behaviorFor(t) !== "fixed").reduce((sum, t) => sum + t.amount, 0) ?? 0;
+  const fixedCosts = data?.transactions.filter((t) => t.type === "expense" && monthKey(t.date) === ym && behaviorFor(t) === "fixed").reduce((sum, t) => sum + t.amount, 0) ?? 0;
   const evolution = useMemo(
     () =>
       data
@@ -133,6 +138,17 @@ function Dashboard() {
         ))}
       </section>
 
+      <section className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-2xl border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between"><h2 className="font-semibold">Contas e benefícios</h2><Button size="sm" variant="ghost" asChild><Link to="/contas">Gerenciar</Link></Button></div>
+          {data.accounts.length ? <div className="space-y-2">{data.accounts.map((account) => <Link key={account.id} to="/contas/$id" params={{ id: account.id }} className="flex items-center justify-between gap-3 text-sm"><span className="truncate">{account.name} <span className="text-xs text-muted-foreground">· {account.kind === "benefit_card" ? "VA/VR" : account.kind === "investment" ? "Investimento" : account.kind === "loan" ? "Empréstimo" : account.institution_name}</span></span><span className="num font-medium">{money(accountBalance(account, data.transactions))}</span></Link>)}</div> : <p className="text-sm text-muted-foreground">Nenhuma conta cadastrada.</p>}
+        </div>
+        <div className="rounded-2xl border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between"><h2 className="font-semibold">Cartões de crédito</h2><Button size="sm" variant="ghost" asChild><Link to="/contas">Gerenciar</Link></Button></div>
+          {data.cards.length ? <div className="space-y-3">{data.cards.map((card) => <Link key={card.id} to="/cartoes/$id" params={{ id: card.id }} className="block text-sm"><div className="flex justify-between gap-3"><span className="truncate">{card.name}</span><span className="num text-expense">Fatura {money(invoiceTotal(card.id, ym, data.transactions))}</span></div><p className="text-xs text-muted-foreground">Disponível {money(cardUsage(card, data.transactions).available)} · limite {money(card.limit)}</p></Link>)}</div> : <p className="text-sm text-muted-foreground">Nenhum cartão cadastrado.</p>}
+        </div>
+      </section>
+
       <InsightsCards />
 
       {!hasData ? (
@@ -198,6 +214,10 @@ function Dashboard() {
                 </ResponsiveContainer>
               </div>
             </div>
+          </section>
+          <section className="grid gap-4 lg:grid-cols-3">
+            <div className="rounded-2xl border bg-card p-4"><h2 className="mb-3 font-semibold">Receitas por categoria</h2>{incomeCats.length ? <ul className="space-y-2">{incomeCats.slice(0, 6).map((item) => <li key={item.id} className="flex justify-between gap-2 text-sm"><span className="truncate">{item.name}</span><span className="num text-income">{money(item.value)}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">Sem receitas neste mês.</p>}</div>
+            <div className="rounded-2xl border bg-card p-4 lg:col-span-2"><h2 className="mb-3 font-semibold">Despesas fixas x variáveis</h2><div className="grid grid-cols-2 gap-3"><div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">Fixas</p><p className="num mt-1 text-xl font-semibold">{money(fixedCosts)}</p></div><div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">Variáveis / sem classificação</p><p className="num mt-1 text-xl font-semibold">{money(variableCosts)}</p></div></div><p className="mt-2 text-xs text-muted-foreground">Classifique categorias e subcategorias na aba Categorias.</p></div>
           </section>
           <section>
             <div className="mb-3 flex items-center justify-between">

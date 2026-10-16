@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Download, FileUp, Fingerprint, ShieldAlert, Tags } from "lucide-react";
+import { Download, EyeOff, FileUp, Fingerprint, ShieldAlert, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,6 +118,7 @@ function Config() {
         </div>
         <div className="flex items-center justify-between"><Label>Modo escuro</Label><Switch checked={s.theme === "dark"} onCheckedChange={(c) => upd({ theme: c ? "dark" : "light" })} /></div>
         <div className="flex items-center justify-between"><Label>Aviso sonoro de vencimentos</Label><Switch checked={s.sound} onCheckedChange={(c) => upd({ sound: c })} /></div>
+        <div className="flex items-center justify-between"><Label className="flex items-center gap-2"><EyeOff className="h-4 w-4" /> Ocultar valores</Label><Switch checked={!!s.hideValues} onCheckedChange={(c) => upd({ hideValues: c })} /></div>
         <div className="flex gap-2">
           <Button variant="secondary" asChild><Link to="/categorias"><Tags /> Categorias</Link></Button>
           <Button variant="secondary" asChild><Link to="/importar"><FileUp /> Importar extratos</Link></Button>
@@ -125,6 +126,14 @@ function Config() {
       </Section>
 
       <Section title="Segurança">
+        <div className="flex items-center justify-between gap-3">
+          <Label>Bloqueio automático por inatividade</Label>
+          <Select value={String(s.autoLockMinutes ?? 0)} onValueChange={(v) => upd({ autoLockMinutes: Number(v) })}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="0">Desativado</SelectItem><SelectItem value="1">1 minuto</SelectItem><SelectItem value="5">5 minutos</SelectItem><SelectItem value="15">15 minutos</SelectItem><SelectItem value="30">30 minutos</SelectItem></SelectContent>
+          </Select>
+        </div>
+        {!s.pin_hash && s.autoLockMinutes ? <p className="text-xs text-warning">Configure um PIN para ativar o bloqueio automático.</p> : null}
         <div className="flex gap-2">
           <Input type="password" inputMode="numeric" maxLength={6} placeholder="Novo PIN (6 dígitos)" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
           <Button onClick={async () => {
