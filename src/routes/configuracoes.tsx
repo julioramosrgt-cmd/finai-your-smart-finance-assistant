@@ -93,6 +93,7 @@ function Config() {
     const dump = {
       accounts: await db.accounts.toArray(),
       cards: await db.cards.toArray(),
+      loanContracts: await db.loanContracts.toArray(),
       categories: await db.categories.toArray(),
       subcategories: await db.subcategories.toArray(),
       transactions: await db.transactions.toArray(),

@@ -86,6 +86,7 @@ function Dashboard() {
     { label: "Saldo projetado do mês", value: m.projected, tone: m.projected >= 0 ? "text-income" : "text-expense", hint: "Inclui pendências e faturas até o fim do mês" },
     { label: "Faturas abertas", value: m.openInvoices, tone: m.openInvoices > 0 ? "text-expense" : "", hint: "Faturas que vencem neste mês" },
     { label: "Gasto por competência", value: m.expenseComp, tone: "text-expense", hint: `Receitas: ${money(m.incomeComp)}` },
+    { label: "Dívidas e empréstimos", value: data.loanContracts.reduce((sum, contract) => sum + contract.outstanding_balance, 0), tone: "text-expense", hint: `${data.loanContracts.length} contratos`, href: "/emprestimos" },
   ];
 
   return (
@@ -128,14 +129,12 @@ function Dashboard() {
         </section>
       )}
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {stats.map((s, i) => (
-          <div key={s.label} className={cn("rounded-2xl border bg-card p-4", i === 0 && "bg-hero")}>
-            <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
-            <p className={cn("num mt-2 text-lg font-semibold sm:text-2xl", s.tone)}>{money(s.value)}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">{s.hint}</p>
-          </div>
-        ))}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {stats.map((s, i) => {
+          const className = cn("rounded-2xl border bg-card p-4", i === 0 && "bg-hero");
+          const content = <><p className="text-xs font-medium text-muted-foreground">{s.label}</p><p className={cn("num mt-2 text-lg font-semibold sm:text-2xl", s.tone)}>{money(s.value)}</p><p className="mt-1 text-[11px] text-muted-foreground">{s.hint}</p></>;
+          return "href" in s ? <Link key={s.label} to={s.href} className={className}>{content}</Link> : <div key={s.label} className={className}>{content}</div>;
+        })}
       </section>
 
       <section className="grid gap-3 md:grid-cols-2">

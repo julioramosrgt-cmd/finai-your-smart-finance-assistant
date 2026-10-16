@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bot, ChartNoAxesCombined, CreditCard, FileUp, LayoutDashboard, ListOrdered, Settings, Tags, Wallet } from "lucide-react";
+import { Banknote, Bot, ChartNoAxesCombined, CreditCard, FileUp, LayoutDashboard, ListOrdered, Settings, Tags, Wallet } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ const NAV = [
   { title: "Relatórios", url: "/relatorios", icon: ChartNoAxesCombined },
   { title: "Assistente IA", url: "/assistente", icon: Bot },
   { title: "Contas e cartões", url: "/contas", icon: Wallet },
+  { title: "Empréstimos", url: "/emprestimos", icon: Banknote },
   { title: "Categorias", url: "/categorias", icon: Tags },
   { title: "Importar e conciliar", url: "/importar", icon: FileUp },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
@@ -145,6 +146,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <SidebarTrigger className="hidden md:inline-flex" />
             <Logo className="md:hidden" />
             <div className="ml-auto flex items-center gap-1 md:hidden">
+              <Link to="/emprestimos" className="rounded-lg p-2 text-muted-foreground" aria-label="Empréstimos e financiamentos">
+                <Banknote className="h-5 w-5" />
+              </Link>
               <Link to="/categorias" className="rounded-lg p-2 text-muted-foreground" aria-label="Categorias">
                 <Tags className="h-5 w-5" />
               </Link>

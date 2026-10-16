@@ -26,6 +26,22 @@ export interface Card {
   sort_order?: number;
 }
 
+export interface LoanContract {
+  id: string;
+  name: string;
+  institution_name: string;
+  kind: string;
+  original_amount: number;
+  outstanding_balance: number;
+  installment_amount: number;
+  total_installments?: number;
+  installments_remaining: number;
+  next_due_date?: string;
+  interest_rate?: number;
+  notes?: string;
+  created_at: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -98,6 +114,7 @@ export interface InsightRecord {
 class FinDB extends Dexie {
   accounts!: Table<Account, string>;
   cards!: Table<Card, string>;
+  loanContracts!: Table<LoanContract, string>;
   categories!: Table<Category, string>;
   subcategories!: Table<Subcategory, string>;
   transactions!: Table<Transaction, string>;
@@ -110,6 +127,17 @@ class FinDB extends Dexie {
     this.version(1).stores({
       accounts: "id",
       cards: "id",
+      categories: "id, kind",
+      subcategories: "id, category_id",
+      transactions: "id, date, due_date, account_id, card_id, series_id, invoice_month, category_id, status",
+      settings: "id",
+      chat: "id",
+      insights: "id",
+    });
+    this.version(2).stores({
+      accounts: "id",
+      cards: "id",
+      loanContracts: "id, institution_name, kind, created_at",
       categories: "id, kind",
       subcategories: "id, category_id",
       transactions: "id, date, due_date, account_id, card_id, series_id, invoice_month, category_id, status",

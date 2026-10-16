@@ -23,6 +23,7 @@ import { Route as ApiInsightsRouteImport } from './routes/api/insights'
 import { Route as CartoesIdRouteImport } from './routes/cartoes.$id'
 import { Route as ContasIndexRouteImport } from './routes/contas.index'
 import { Route as ContasIdRouteImport } from './routes/contas.$id'
+import { Route as EmprestimosRouteImport } from './routes/emprestimos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +95,11 @@ const ContasIdRoute = ContasIdRouteImport.update({
   path: '/contas/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmprestimosRoute = EmprestimosRouteImport.update({
+  id: '/emprestimos',
+  path: '/emprestimos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/cartoes/$id': typeof CartoesIdRoute
   '/contas/$id': typeof ContasIdRoute
   '/contas/': typeof ContasIndexRoute
+  '/emprestimos': typeof EmprestimosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/cartoes/$id': typeof CartoesIdRoute
   '/contas/$id': typeof ContasIdRoute
   '/contas': typeof ContasIndexRoute
+  '/emprestimos': typeof EmprestimosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/cartoes/$id': typeof CartoesIdRoute
   '/contas/$id': typeof ContasIdRoute
   '/contas/': typeof ContasIndexRoute
+  '/emprestimos': typeof EmprestimosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/cartoes/$id'
     | '/contas/$id'
     | '/contas/'
+    | '/emprestimos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface RootRouteChildren {
   CartoesIdRoute: typeof CartoesIdRoute
   ContasIdRoute: typeof ContasIdRoute
   ContasIndexRoute: typeof ContasIndexRoute
+  EmprestimosRoute: typeof EmprestimosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -312,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContasIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/emprestimos': {
+      id: '/emprestimos'
+      path: '/emprestimos'
+      fullPath: '/emprestimos'
+      preLoaderRoute: typeof EmprestimosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartoesIdRoute: CartoesIdRoute,
   ContasIdRoute: ContasIdRoute,
   ContasIndexRoute: ContasIndexRoute,
+  EmprestimosRoute: EmprestimosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
