@@ -12,6 +12,7 @@ export interface Account {
   institution_name: string;
   initial_balance: number;
   created_at: string;
+  sort_order?: number;
 }
 
 export interface Card {
@@ -22,6 +23,7 @@ export interface Card {
   closing_day: number;
   due_day: number;
   created_at: string;
+  sort_order?: number;
 }
 
 export interface Category {
@@ -29,12 +31,14 @@ export interface Category {
   name: string;
   kind: "income" | "expense";
   color: string;
+  sort_order?: number;
 }
 
 export interface Subcategory {
   id: string;
   category_id: string;
   name: string;
+  sort_order?: number;
 }
 
 export interface Transaction {

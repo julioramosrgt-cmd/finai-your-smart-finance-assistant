@@ -30,6 +30,7 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
   }, [open, editing]);
   async function save() {
     if (!name.trim()) return toast.error("Informe o nome.");
+    const accounts = await db.accounts.toArray();
     const acc: Account = {
       id: editing?.id ?? uid(),
       name: name.trim(),
@@ -37,6 +38,7 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
       kind,
       initial_balance: parseMoney(bal),
       created_at: editing?.created_at ?? new Date().toISOString(),
+      sort_order: editing?.sort_order ?? Math.max(-1, ...accounts.map((account, index) => account.sort_order ?? index)) + 1,
     };
     await db.accounts.put(acc);
     if (editing) {
@@ -81,6 +83,7 @@ export function CardForm({ open, onOpenChange, editing }: { open: boolean; onOpe
   }, [open, editing]);
   async function save() {
     if (!f.name.trim()) return toast.error("Informe o nome.");
+    const cards = await db.cards.toArray();
     const card: Card = {
       id: editing?.id ?? uid(),
       name: f.name.trim(),
@@ -89,6 +92,7 @@ export function CardForm({ open, onOpenChange, editing }: { open: boolean; onOpe
       closing_day: Math.min(28, Math.max(1, Number(f.closing) || 1)),
       due_day: Math.min(28, Math.max(1, Number(f.due) || 10)),
       created_at: editing?.created_at ?? new Date().toISOString(),
+      sort_order: editing?.sort_order ?? Math.max(-1, ...cards.map((item, index) => item.sort_order ?? index)) + 1,
     };
     await db.cards.put(card);
     if (editing) {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { CreditCard, Pencil, Plus, Trash2, Wallet } from "lucide-react";
+import { ArrowDown, ArrowUp, CreditCard, Pencil, Plus, Trash2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useData } from "@/hooks/use-data";
@@ -32,6 +32,14 @@ function Contas() {
   const [editCard, setEditCard] = useState<Card | null>(null);
   if (!data) return null;
   const cm = currentMonth();
+  const accounts = data.accounts.map((item, index) => ({ ...item, sort_order: item.sort_order ?? index })).sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at));
+  const cards = data.cards.map((item, index) => ({ ...item, sort_order: item.sort_order ?? index })).sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at));
+
+  async function moveItem(items: { id: string; sort_order?: number }[], index: number, direction: -1 | 1, update: (id: string, order: number) => Promise<unknown>) {
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    await Promise.all([update(items[index].id, target), update(items[target].id, index)]);
+  }
 
   async function delAcc(a: Account) {
     const n = await db.transactions.where("account_id").equals(a.id).count();
@@ -52,11 +60,11 @@ function Contas() {
           <h2 className="font-semibold">Contas</h2>
           <Button size="sm" variant="secondary" onClick={() => { setEditAcc(null); setAccOpen(true); }}><Plus /> Conta</Button>
         </div>
-        {data.accounts.length === 0 ? (
+        {accounts.length === 0 ? (
           <EmptyState icon={<Wallet />} title="Nenhuma conta" text="Adicione sua conta corrente, benefício ou investimento." />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {data.accounts.map((a) => {
+            {accounts.map((a, index) => {
               const bal = accountBalance(a, data.transactions);
               return (
                 <div key={a.id} className="group rounded-2xl border bg-card p-4">
@@ -66,6 +74,8 @@ function Contas() {
                       <p className="text-xs text-muted-foreground">{KIND_LABEL[a.kind]} · {a.institution_name || "—"}</p>
                     </Link>
                     <div className="flex">
+                      <Button aria-label="Mover conta para cima" size="icon" variant="ghost" className="h-8 w-8" disabled={index === 0} onClick={() => moveItem(accounts, index, -1, (id, order) => db.accounts.update(id, { sort_order: order }))}><ArrowUp /></Button>
+                      <Button aria-label="Mover conta para baixo" size="icon" variant="ghost" className="h-8 w-8" disabled={index === accounts.length - 1} onClick={() => moveItem(accounts, index, 1, (id, order) => db.accounts.update(id, { sort_order: order }))}><ArrowDown /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditAcc(a); setAccOpen(true); }}><Pencil /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-expense" onClick={() => delAcc(a)}><Trash2 /></Button>
                     </div>
@@ -85,11 +95,11 @@ function Contas() {
           <h2 className="font-semibold">Cartões de crédito</h2>
           <Button size="sm" variant="secondary" onClick={() => { setEditCard(null); setCardOpen(true); }}><Plus /> Cartão</Button>
         </div>
-        {data.cards.length === 0 ? (
+        {cards.length === 0 ? (
           <EmptyState icon={<CreditCard />} title="Nenhum cartão" text="Cadastre seus cartões com limite, fechamento e vencimento." />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {data.cards.map((c) => {
+            {cards.map((c, index) => {
               const u = cardUsage(c, data.transactions);
               const inv = invoiceTotal(c.id, cm, data.transactions);
               return (
@@ -100,6 +110,8 @@ function Contas() {
                       <p className="text-xs text-muted-foreground">{c.institution_name || "—"} · fecha dia {c.closing_day} · vence dia {c.due_day}</p>
                     </Link>
                     <div className="flex">
+                      <Button aria-label="Mover cartão para cima" size="icon" variant="ghost" className="h-8 w-8" disabled={index === 0} onClick={() => moveItem(cards, index, -1, (id, order) => db.cards.update(id, { sort_order: order }))}><ArrowUp /></Button>
+                      <Button aria-label="Mover cartão para baixo" size="icon" variant="ghost" className="h-8 w-8" disabled={index === cards.length - 1} onClick={() => moveItem(cards, index, 1, (id, order) => db.cards.update(id, { sort_order: order }))}><ArrowDown /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditCard(c); setCardOpen(true); }}><Pencil /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-expense" onClick={() => delCard(c)}><Trash2 /></Button>
                     </div>
