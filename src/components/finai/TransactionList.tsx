@@ -36,7 +36,7 @@ export function TransactionList({ items, emptyText = "Nenhum lançamento neste p
       ? data?.cards.find((c) => c.id === t.card_id)?.name
       : data?.accounts.find((a) => a.id === t.account_id)?.name;
   const cat = (t: Transaction) =>
-    [data?.categories.find((c) => c.id === t.category_id)?.name, data?.subcategories.find((s) => s.id === t.subcategory_id)?.name]
+    [t.investment_operation ? `Investimentos / ${t.investment_operation === "aporte" ? "Aporte" : "Resgate"}` : data?.categories.find((c) => c.id === t.category_id)?.name, data?.subcategories.find((s) => s.id === t.subcategory_id)?.name]
       .filter(Boolean)
       .join(" · ");
 

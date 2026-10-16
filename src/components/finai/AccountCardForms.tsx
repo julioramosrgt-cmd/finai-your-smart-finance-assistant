@@ -9,6 +9,7 @@ import { db, uid, type Account, type AccountKind, type Card } from "@/lib/db";
 import { normalizeTx } from "@/lib/finance";
 import { parseMoney } from "@/lib/format";
 import { useProfile } from "@/hooks/use-profile";
+import { useData } from "@/hooks/use-data";
 
 export const KIND_LABEL: Record<AccountKind, string> = {
   checking: "Conta corrente",
@@ -22,16 +23,21 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
   const [bank, setBank] = useState("");
   const [kind, setKind] = useState<AccountKind>("checking");
   const [bal, setBal] = useState("");
+  const [linkedAccount, setLinkedAccount] = useState("");
   const profile = useProfile();
+  const data = useData();
   useEffect(() => {
     if (!open) return;
     setName(editing?.name ?? "");
     setBank(editing?.institution_name ?? "");
     setKind(editing?.kind ?? "checking");
     setBal(editing ? String(editing.initial_balance).replace(".", ",") : "");
+    setLinkedAccount(editing?.linked_account_id ?? "");
   }, [open, editing]);
   async function save() {
     if (!name.trim()) return toast.error("Informe o nome.");
+    const linkedAccountRecord = data?.accounts.find((account) => account.id === linkedAccount && account.kind === "checking");
+    if (kind === "investment" && !linkedAccountRecord) return toast.error("Vincule o investimento a uma conta corrente do mesmo perfil.");
     const accounts = await db.accounts.where("profile").equals(editing?.profile ?? profile).toArray();
     const acc: Account = {
       id: editing?.id ?? uid(),
@@ -40,6 +46,7 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
       institution_name: bank.trim(),
       kind,
       initial_balance: parseMoney(bal),
+      linked_account_id: kind === "investment" ? linkedAccount : undefined,
       created_at: editing?.created_at ?? new Date().toISOString(),
       sort_order: editing?.sort_order ?? Math.max(-1, ...accounts.map((account, index) => account.sort_order ?? index)) + 1,
     };
@@ -66,6 +73,19 @@ export function AccountForm({ open, onOpenChange, editing }: { open: boolean; on
               </SelectContent>
             </Select>
           </div>
+          {kind === "investment" && (
+            <div className="col-span-2 space-y-1.5">
+              <Label>Conta de Vínculo <span className="text-expense">*</span></Label>
+              <Select value={linkedAccount} onValueChange={setLinkedAccount}>
+                <SelectTrigger><SelectValue placeholder="Selecione a conta corrente" /></SelectTrigger>
+                <SelectContent>
+                  {data?.accounts.filter((account) => account.kind === "checking" && account.id !== editing?.id).map((account) => (
+                    <SelectItem key={account.id} value={account.id}>{account.name} · {account.institution_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="col-span-2 space-y-1.5"><Label>Saldo inicial</Label><Input className="num" inputMode="decimal" value={bal} onChange={(e) => setBal(e.target.value)} /></div>
         </div>
         <DialogFooter><Button onClick={save}>Salvar</Button></DialogFooter>

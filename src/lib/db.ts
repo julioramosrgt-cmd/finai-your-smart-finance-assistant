@@ -13,6 +13,7 @@ export interface Account {
   kind: AccountKind;
   institution_name: string;
   initial_balance: number;
+  linked_account_id?: string;
   created_at: string;
   sort_order?: number;
 }
@@ -92,6 +93,7 @@ export interface Transaction {
   invoice_month?: string; // YYYY-MM (mês de vencimento da fatura)
   paid_at?: string;
   is_adjustment?: boolean;
+  investment_operation?: "aporte" | "resgate";
   created_at: string;
 }
 

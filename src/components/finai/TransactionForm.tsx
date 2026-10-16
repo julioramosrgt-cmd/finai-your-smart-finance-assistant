@@ -15,6 +15,14 @@ import { useProfile } from "@/hooks/use-profile";
 
 type Scope = "one" | "series";
 
+function investmentAccountLabel(accounts: { id: string; kind: string }[], source: string, destination: string, fallback = "Transferência") {
+  const sourceAccount = accounts.find((account) => source === `acc:${account.id}`);
+  const destinationAccount = accounts.find((account) => account.id === destination);
+  if (sourceAccount?.kind === "investment") return "Resgate de investimento";
+  if (destinationAccount?.kind === "investment") return "Aporte em investimento";
+  return fallback;
+}
+
 export function TransactionForm({
   open,
   onOpenChange,
@@ -69,10 +77,21 @@ export function TransactionForm({
       setInstallments("1");
       setRecurring("none");
       setPaid(false);
+      const defaultAccountId = defaultSource?.startsWith("acc:") ? defaultSource.slice(4) : "";
+      const defaultAccount = data?.accounts.find((account) => account.id === defaultAccountId);
+      if (defaultAccount?.kind === "investment" && defaultAccount.linked_account_id) {
+        setType("transfer");
+        setToAccount(defaultAccount.linked_account_id);
+        setDescription("Resgate de investimento");
+        setPaid(true);
+      }
     }
-  }, [open, editing, defaultSource]);
+  }, [open, editing, defaultSource, data?.accounts]);
 
   const isCard = source.startsWith("card:");
+  const selectedSourceAccount = data?.accounts.find((account) => source === `acc:${account.id}`);
+  const selectedDestinationAccount = data?.accounts.find((account) => account.id === toAccount);
+  const isInvestmentTransfer = type === "transfer" && (selectedSourceAccount?.kind === "investment" || selectedDestinationAccount?.kind === "investment");
   const cats = useMemo(
     () => (data?.categories ?? []).filter((c) => c.kind === (type === "income" ? "income" : "expense")),
     [data, type],
@@ -102,6 +121,22 @@ export function TransactionForm({
       toast.error("Selecione uma conta de destino do perfil ativo.");
       return;
     }
+    const sourceAccount = kind === "acc" ? data?.accounts.find((account) => account.id === id) : undefined;
+    const destinationAccount = type === "transfer" ? data?.accounts.find((account) => account.id === toAccount) : undefined;
+    const investmentAccount = type === "transfer"
+      ? sourceAccount?.kind === "investment" ? sourceAccount : destinationAccount?.kind === "investment" ? destinationAccount : undefined
+      : undefined;
+    if (investmentAccount) {
+      if (type !== "transfer" || !investmentAccount.linked_account_id) {
+        toast.error("Aportes e resgates exigem uma conta de vínculo e uma transferência.");
+        return;
+      }
+      const linkedAccountId = sourceAccount?.id === investmentAccount.id ? toAccount : id;
+      if (linkedAccountId !== investmentAccount.linked_account_id) {
+        toast.error("Use a conta corrente vinculada a este investimento.");
+        return;
+      }
+    }
     if (editing) {
       const patch = {
         type,
@@ -110,6 +145,7 @@ export function TransactionForm({
         account_id: kind === "acc" ? id : undefined,
         card_id: kind === "card" ? id : undefined,
         to_account_id: type === "transfer" ? toAccount : undefined,
+        investment_operation: investmentAccount ? (sourceAccount?.id === investmentAccount.id ? "resgate" : "aporte") : undefined,
       };
       if (scope === "series" && editing.series_id) {
         const all = await db.transactions.where("series_id").equals(editing.series_id).toArray();
@@ -132,8 +168,8 @@ export function TransactionForm({
           amount: value,
           date,
           due_date: due,
-          status: kind === "card" ? editing.status : paid ? "paid" : "pending",
-          paid_at: kind === "card" ? editing.paid_at : paid ? (editing.paid_at ?? todayISO()) : undefined,
+          status: kind === "card" ? editing.status : isInvestmentTransfer || paid ? "paid" : "pending",
+          paid_at: kind === "card" ? editing.paid_at : isInvestmentTransfer || paid ? (editing.paid_at ?? todayISO()) : undefined,
         });
         await db.transactions.put(next);
       }
@@ -151,9 +187,13 @@ export function TransactionForm({
         subcategory_id: sub,
         installments: Math.max(1, Number(installments) || 1),
         recurring: recurring === "none" ? undefined : recurring,
-        paid,
+        paid: investmentAccount ? true : paid,
       });
-      await db.transactions.bulkAdd(txs.map((transaction) => ({ ...transaction, profile })));
+      await db.transactions.bulkAdd(txs.map((transaction) => ({
+        ...transaction,
+        profile,
+        investment_operation: investmentAccount ? (sourceAccount?.id === investmentAccount.id ? "resgate" : "aporte") : undefined,
+      })));
       toast.success(txs.length > 1 ? `${txs.length} lançamentos projetados.` : "Lançamento criado.");
     }
     onOpenChange(false);
@@ -170,7 +210,7 @@ export function TransactionForm({
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="expense">Despesa</TabsTrigger>
               <TabsTrigger value="income">Receita</TabsTrigger>
-              <TabsTrigger value="transfer">Transferência</TabsTrigger>
+              <TabsTrigger value="transfer">{investmentAccountLabel(data?.accounts ?? [], source, toAccount)}</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="grid grid-cols-5 gap-3">
@@ -185,14 +225,23 @@ export function TransactionForm({
           </div>
           <div className="space-y-1.5">
             <Label>{type === "transfer" ? "Conta de origem" : "Conta ou cartão"}</Label>
-            <Select value={source} onValueChange={setSource}>
+            <Select value={source} onValueChange={(value) => {
+              setSource(value);
+              const selected = value.startsWith("acc:") ? data?.accounts.find((account) => account.id === value.slice(4)) : undefined;
+              if (selected?.kind === "investment" && selected.linked_account_id) {
+                setType("transfer");
+                setToAccount(selected.linked_account_id);
+                setDescription("Resgate de investimento");
+                setPaid(true);
+              }
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
                 {data?.accounts.map((a) => (
                   <SelectItem key={a.id} value={`acc:${a.id}`}>
-                    {a.name} · {a.institution_name}
+                    {a.name} · {a.institution_name}{a.kind === "investment" ? " (Investimento)" : ""}
                   </SelectItem>
                 ))}
                 {type !== "transfer" &&
@@ -206,8 +255,17 @@ export function TransactionForm({
           </div>
           {type === "transfer" && (
             <div className="space-y-1.5">
-              <Label>Conta de destino</Label>
-              <Select value={toAccount} onValueChange={setToAccount}>
+              <Label>{investmentAccountLabel(data?.accounts ?? [], source, toAccount, "Conta de destino")}</Label>
+              <Select value={toAccount} onValueChange={(value) => {
+                setToAccount(value);
+                const selected = data?.accounts.find((account) => account.id === value);
+                if (selected?.kind === "investment" && selected.linked_account_id) {
+                  setSource(`acc:${selected.linked_account_id}`);
+                  setType("transfer");
+                  setDescription("Aporte em investimento");
+                  setPaid(true);
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -293,7 +351,7 @@ export function TransactionForm({
               </div>
             </div>
           )}
-          {!isCard && (!editing || scope === "one") && (
+          {!isCard && !isInvestmentTransfer && (!editing || scope === "one") && (
             <div className="flex items-center justify-between rounded-xl border p-3">
               <div>
                 <p className="text-sm font-medium">Já foi pago / recebido</p>

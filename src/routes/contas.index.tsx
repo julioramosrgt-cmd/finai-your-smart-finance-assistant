@@ -72,6 +72,7 @@ function Contas() {
                     <Link to="/contas/$id" params={{ id: a.id }} className="min-w-0">
                       <p className="truncate font-semibold">{a.name}</p>
                       <p className="text-xs text-muted-foreground">{KIND_LABEL[a.kind]} · {a.institution_name || "—"}</p>
+                      {a.kind === "investment" && <p className="mt-1 text-xs text-muted-foreground">Vinculada a {data.accounts.find((account) => account.id === a.linked_account_id)?.name ?? "conta não localizada"}</p>}
                     </Link>
                     <div className="flex">
                       <Button aria-label="Mover conta para cima" size="icon" variant="ghost" className="h-8 w-8" disabled={index === 0} onClick={() => moveItem(accounts, index, -1, (id, order) => db.accounts.update(id, { sort_order: order }))}><ArrowUp /></Button>
