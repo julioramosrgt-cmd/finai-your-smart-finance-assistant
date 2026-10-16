@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as CategoriasRouteImport } from './routes/categorias'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as ImportarRouteImport } from './routes/importar'
 import { Route as LancamentosRouteImport } from './routes/lancamentos'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -25,9 +28,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssistenteRoute = AssistenteRouteImport.update({
+  id: '/assistente',
+  path: '/assistente',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriasRoute = CategoriasRouteImport.update({
   id: '/categorias',
   path: '/categorias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportarRoute = ImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LancamentosRoute = LancamentosRouteImport.update({
@@ -73,7 +91,10 @@ const ContasIdRoute = ContasIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/categorias': typeof CategoriasRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/importar': typeof ImportarRoute
   '/lancamentos': typeof LancamentosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
@@ -85,7 +106,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/categorias': typeof CategoriasRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/importar': typeof ImportarRoute
   '/lancamentos': typeof LancamentosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
@@ -98,7 +122,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/categorias': typeof CategoriasRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/importar': typeof ImportarRoute
   '/lancamentos': typeof LancamentosRoute
   '/onboarding': typeof OnboardingRoute
   '/api/chat': typeof ApiChatRoute
@@ -112,7 +139,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/assistente'
     | '/categorias'
+    | '/configuracoes'
+    | '/importar'
     | '/lancamentos'
     | '/onboarding'
     | '/api/chat'
@@ -124,7 +154,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/assistente'
     | '/categorias'
+    | '/configuracoes'
+    | '/importar'
     | '/lancamentos'
     | '/onboarding'
     | '/api/chat'
@@ -136,7 +169,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/assistente'
     | '/categorias'
+    | '/configuracoes'
+    | '/importar'
     | '/lancamentos'
     | '/onboarding'
     | '/api/chat'
@@ -149,7 +185,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistenteRoute: typeof AssistenteRoute
   CategoriasRoute: typeof CategoriasRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ImportarRoute: typeof ImportarRoute
   LancamentosRoute: typeof LancamentosRoute
   OnboardingRoute: typeof OnboardingRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -169,11 +208,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assistente': {
+      id: '/assistente'
+      path: '/assistente'
+      fullPath: '/assistente'
+      preLoaderRoute: typeof AssistenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categorias': {
       id: '/categorias'
       path: '/categorias'
       fullPath: '/categorias'
       preLoaderRoute: typeof CategoriasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/importar': {
+      id: '/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof ImportarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lancamentos': {
@@ -237,7 +297,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistenteRoute: AssistenteRoute,
   CategoriasRoute: CategoriasRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
+  ImportarRoute: ImportarRoute,
   LancamentosRoute: LancamentosRoute,
   OnboardingRoute: OnboardingRoute,
   ApiChatRoute: ApiChatRoute,
